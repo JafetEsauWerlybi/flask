@@ -9,30 +9,39 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
 # Cargar el modelo entrenado
-model = joblib.load('modelo.pkl')
+#model = joblib.load('modelo.pkl')
+model = joblib.load('decision_tree_model.pkl')
+
 app.logger.debug('Modelo cargado correctamente.')
+
 
 @app.route('/')
 def home():
-    return render_template('formulario.html')
+    return render_template('Pasajeros.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
+
     try:
         # Obtener los datos enviados en el request
-        abdomen = float(request.form['abdomen'])
-        antena = float(request.form['antena'])
-        
-        # Crear un DataFrame con los datos
-        data_df = pd.DataFrame([[abdomen, antena]], columns=['abdomen', 'antena'])
-        app.logger.debug(f'DataFrame creado: {data_df}')
-        
-        # Realizar predicciones
-        prediction = model.predict(data_df)
-        app.logger.debug(f'Predicción: {prediction[0]}')
-        
-        # Devolver las predicciones como respuesta JSON
-        return jsonify({'categoria': prediction[0]})
+        data = request.get_json(force=True)
+        df = pd.DataFrame([data])
+    
+    # Asegúrate de que el DataFrame tenga las columnas en el mismo orden que el modelo espera
+        df = df[['FrequentFlyer_Yes', 'Age', 'BookedHotelOrNot_Yes', 'ServicesOpted', 'AnnualIncomeClass']]
+
+    # Hacer predicción
+        prediction = model.predict(df)
+    
+    # Devolver la predicción como JSON
+        predictionS =int(prediction[0])
+        prediccionStr = ""
+        if predictionS == 0:
+            prediccionStr = "El cliente no abandonará"
+        else:
+            prediccionStr = "El cliente si abandonará"
+
+        return jsonify({'prediction': prediccionStr})
     except Exception as e:
         app.logger.error(f'Error en la predicción: {str(e)}')
         return jsonify({'error': str(e)}), 400
