@@ -26,31 +26,74 @@
       <h2>Predicción de precios para un auto usado</h2>
     </div>
     <div class="container">
-      <form id="predictionForm">
-        <div class="mb-3">
-          <label for="Present_Price" class="form-label">Precio Actual En El Mercado</label>
-          <input type="number" step="0.01" class="form-control" id="Present_Price" required>
+      <div class="row">
+        <div class="col-md-6">
+          <form id="predictionForm">
+            <div class="mb-3">
+              <label for="Present_Price" class="form-label">Precio Actual En El Mercado</label>
+              <input type="number" step="0.01" class="form-control" id="Present_Price" required>
+            </div>
+            <div class="mb-3">
+              <label for="Age" class="form-label">Edad</label>
+              <input type="number" class="form-control" id="Age" required>
+            </div>
+            <div class="mb-3">
+              <label for="Fuel_Type_Diesel" class="form-label">Tipo de Combustible (Diesel)</label>
+              <select class="form-control" id="Fuel_Type_Diesel" required>
+                <option value="1">Si</option>
+                <option value="0">No</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="Kms_Driven" class="form-label">Kilómetros Recorridos</label>
+              <input type="number" class="form-control" id="Kms_Driven" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
         </div>
-        <div class="mb-3">
-          <label for="Age" class="form-label">Edad</label>
-          <input type="number" class="form-control" id="Age" required>
+        <div class="col-md-6">
+          <div class="container m-3">
+            <h3>Para pruebas</h3>
+            <img src="https://iebdlfthbbxohteapyua.supabase.co/storage/v1/object/public/LCDM/2.jpeg?t=2024-06-24T15%3A36%3A58.710Z" class="img-fluid" />
+            <button class="btn btn-warning m-3" id="downloadExcelBtn" >Descarga el excel</button>
+          </div>
         </div>
-        <div class="mb-3">
-          <label for="Fuel_Type_Diesel" class="form-label">Tipo de Combustible (Diesel)</label>
-          <select class="form-control" id="Fuel_Type_Diesel" required>
-            <option value="1">Si</option>
-            <option value="0">No</option>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label for="Kms_Driven" class="form-label">Kilómetros Recorridos</label>
-          <input type="number" class="form-control" id="Kms_Driven" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
-      </form>
+      </div>
       <div class="mt-3" id="predictionResult"></div>
     </div>
-
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('downloadExcelBtn').addEventListener('click', function() {
+          // Crear un objeto de solicitud de archivo
+          var xhr = new XMLHttpRequest();
+          xhr.open('GET', 'https://raw.githubusercontent.com/JafetEsauWerlybi/dataset/main/car%20data.csv', true);
+          xhr.responseType = 'blob';
+    
+          xhr.onload = function() {
+            if (xhr.status === 200) {
+              // Crear una URL de objeto para el blob
+              var blob = xhr.response;
+              var url = window.URL.createObjectURL(blob);
+    
+              // Crear un enlace de descarga
+              var a = document.createElement('a');
+              a.href = url;
+              a.download = 'car_data.csv'; // Nombre del archivo a descargar
+              document.body.appendChild(a);
+              a.click();
+    
+              // Limpiar y liberar el objeto URL creado
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+            }
+          };
+    
+          xhr.send();
+        });
+      });
+    </script>
+    
     <script>
       document.getElementById('predictionForm').addEventListener('submit', async function(event) {
         event.preventDefault();
