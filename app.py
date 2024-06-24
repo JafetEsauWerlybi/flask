@@ -22,7 +22,7 @@ def home():
 def predict():
     try:
         # Obtener los datos enviados en el request en formato JSON
-        data = request.get_json()
+        data = request.get_json() 
 
         Age = float(data['Age'])
         Present_Price = float(data['Present_Price'])
