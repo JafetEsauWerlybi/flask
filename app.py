@@ -8,54 +8,63 @@ app = Flask(__name__)
 # Configurar el registro
 logging.basicConfig(level=logging.DEBUG)
 
-# Cargar el modelo entrenado y el escalador
-model = joblib.load('md2.pkl')
-scaler = joblib.load('s3f.pkl')
+# Cargar los modelos entrenados y el escalador
+gb_model = joblib.load('gbProyecto.pkl')
+rf_model = joblib.load('randomForestPry.pkl')
+scaler = joblib.load('scalerPry.pkl')
 
-app.logger.debug('Modelo y escalador cargados correctamente.')
+app.logger.debug('Modelos y escalador cargados correctamente.')
 
 @app.route('/')
 def home():
-    return render_template('PrecioDeVenta.html')
+    return render_template('proyecto.html')  # Cambia 'titanic.html' por 'index.html' si es necesario
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
         # Obtener los datos enviados en el request en formato JSON
-        data = request.get_json() 
+        data = request.get_json()
 
-        Age = float(data['Age'])
-        Present_Price = float(data['Present_Price'])
-        Kms_Driven = float(data['Kms_Driven'])
-        Fuel_Type_Diesel = float(data['Fuel_Type_Diesel'])
+        # Extraer las características
+        calle = data['Calle']
+        colonia = data['Colonia']
+        numero_interior = data['NumeroInterior']
+        numero_exterior = data['NumeroExterior']
+        estado = data['Estado']
+        ciudad = data['Ciudad']
+        usuario_id = data['UsuarioID']
+        lat = data['Lat']
+        long = data['Long']
 
-        # Crear un DataFrame con todas las características necesarias
+        # Crear un DataFrame con las características necesarias
         input_data = pd.DataFrame({
-            'Age': [Age],
-            'Present_Price': [Present_Price],
-            'Kms_Driven': [Kms_Driven],
-            'Owner': [0],
-            'Fuel_Type_CNG': [0],
-            'Fuel_Type_Diesel': [Fuel_Type_Diesel],
-            'Fuel_Type_Petrol': [0],
-            'Seller_Type_Dealer': [0],
-            'Seller_Type_Individual': [0],
-            'Transmission_Automatic': [0],
-            'Transmission_Manual': [0],
+            'Calle': [0],
+            'Colonia': [0],
+            'NumeroInterior': [0],
+            'NumeroExterior': [0],
+            'Estado': [0],
+            'Ciudad': [0],
+            'UsuarioID': [0],
+            'Lat': [lat],
+            'Long': [long]
         })
 
         # Escalar los datos de entrada
         scaled_data = scaler.transform(input_data)
 
-        # Seleccionar solo las características usadas para el modelo
-        scaled_data_for_prediction = scaled_data[:, [0, 1, 2, 5]]  # Asegúrate de que estos índices son correctos
+        scaled_data_for_prediction = scaled_data[:, [-1,-2,0]]  # Asegúrate de que estos índices son correctos
+        scaled_data_for_predictionCla = scaled_data[:, [-1,-2]]  # Asegúrate de que estos índices son correctos
 
-        # Realizar la predicción con los datos escalados
-        prediccion = model.predict(scaled_data_for_prediction)
+        # Realizar las predicciones con los datos escalados
+        gb_prediction = gb_model.predict(scaled_data_for_predictionCla)
+        rf_prediction = rf_model.predict(scaled_data_for_prediction)
 
-        # Devolver la predicción como JSON
-        prediction_value = float(prediccion[0])  # Convertir a float si es necesario
-        return jsonify({'prediction': prediction_value})
+        # Devolver las predicciones como JSON
+        return jsonify({
+            'GradientBoostingPrediction': gb_prediction.tolist(),
+            'RandomForestPrediction': rf_prediction.tolist()
+        })
+
     except Exception as e:
         app.logger.error(f'Error en la predicción: {str(e)}')
         return jsonify({'error': str(e)}), 400
